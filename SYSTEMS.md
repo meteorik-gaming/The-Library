@@ -1,6 +1,6 @@
 # Systems in The Library
 
-A running catalog of the reusable, SFW, generic game mechanics built in this
+A running catalog of the reusable, generic game mechanics built in this
 repo. The Library exists to prototype systems as a standalone, free-to-use
 catalog — this file tracks what exists, where it lives, and its status.
 
@@ -60,6 +60,11 @@ catalog — this file tracks what exists, where it lives, and its status.
   (`addons/dialogic/`, v2.0-Alpha-20, MIT license) — installed and enabled,
   autoloaded as `Dialogic`. Not wired into any scene/content yet — installed
   ahead of need for future dialogue-driven systems.
+- **[Character Templates Pack](https://erisesra.itch.io/character-templates-pack)**
+  by Eris Esra — reserved for future placeholder character art (not added to
+  the repo yet). Its license only covers finished work built with it: the
+  templates themselves may not be resold/redistributed as a standalone pack.
+  See [LICENSE](LICENSE) for the full terms and required credit.
 
 ## Deliberately deferred
 

@@ -1,16 +1,19 @@
-MIT License
+The Library License
 
 Copyright (c) 2026 Meteorik Gaming
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+of this repository ("The Library") to use, copy, modify, merge, and
+incorporate its systems, code, and assets into your own projects — including
+commercial ones — without restriction on what you build with them.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+The one thing this permission does NOT cover: redistributing The Library
+itself, as a whole or in substantially unmodified form, as a standalone
+product. This means you may not resell it, repackage it, or charge for
+access to it (e.g. re-uploading this repo or its systems as-is to an asset
+store, marketplace, or paywall). If you've built something with it — your
+own game, tool, or system that meaningfully changes or extends what's here —
+that work is yours to license and sell however you like.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -23,7 +26,15 @@ SOFTWARE.
 ---
 
 This license covers the original code and content in this repository. Bundled
-third-party components keep their own licenses:
+third-party components keep their own, separate licenses:
+
 - `assets/typography/` (Pixelify Sans) — SIL Open Font License, see
   `assets/typography/OFL.txt`.
 - `addons/dialogic/` (Dialogic) — MIT License, see `addons/dialogic/LICENSE`.
+- Any character/sprite templates sourced from Eris Esra's Character
+  Templates Pack (https://erisesra.itch.io/character-templates-pack) keep
+  that pack's own terms: commercial use of your finished work is allowed,
+  but the templates themselves may not be resold or redistributed — as-is or
+  modified — as a standalone asset pack. Required credit for free/non-commercial
+  use: "Original character template created by Eris Esra:
+  https://erisesra.itch.io/character-templates-pack".

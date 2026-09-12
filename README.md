@@ -1,7 +1,7 @@
 # The Library
 
-A free-to-use, catalog of generic, reusable 2D game systems built in
-Godot 4.7 — menus, screen flow, placeholder movement/room mechanics, and dev
+A free-to-use catalog of generic, reusable 2D game systems built in Godot
+4.7 — menus, screen flow, placeholder movement/room mechanics, and dev
 tooling, meant to be dropped into other projects rather than played as a game
 in its own right.
 
@@ -34,5 +34,9 @@ godot --path . res://tests/worlds_smoke_test.tscn
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Bundled third-party components (Pixelify Sans,
-Dialogic) keep their own licenses; see the LICENSE file for details.
+Free to use, modify, and build into your own projects — including
+commercial ones. The Library itself (this repo, as a whole or substantially
+unmodified) may not be resold, repackaged, or put behind a paywall. See
+[LICENSE](LICENSE) for the exact terms and for the separate licenses of
+bundled third-party components (Pixelify Sans, Dialogic, and any character
+templates sourced from Eris Esra's Character Templates Pack).
