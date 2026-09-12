@@ -1,6 +1,6 @@
 # The Library
 
-A free-to-use, SFW catalog of generic, reusable 2D game systems built in
+A free-to-use, catalog of generic, reusable 2D game systems built in
 Godot 4.7 — menus, screen flow, placeholder movement/room mechanics, and dev
 tooling, meant to be dropped into other projects rather than played as a game
 in its own right.
