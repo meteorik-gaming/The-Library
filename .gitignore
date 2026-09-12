@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Ad-hoc debug recordings from tests/record_gif.gd -- not curated like
+# tests/screenshots/, don't belong in repo history.
+/tests/gifs/

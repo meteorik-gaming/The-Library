@@ -2,8 +2,8 @@ extends Node
 ## Records a short animated GIF of any scene in motion — for bugs a static
 ## screenshot can't catch (the NPC-shrinks-while-patrolling bug that led to
 ## this tool is a perfect example: the very first frame looked correct).
-## Needs ffmpeg on PATH; frames + the assembled GIF land in this project's
-## user:// data dir (printed on completion).
+## Needs ffmpeg on PATH. Saves to tests/gifs/<scene_name>.gif (gitignored —
+## these are ad-hoc debug recordings, not curated like tests/screenshots/).
 ##
 ##   <godot> res://tests/record_gif.tscn -- <scene_path> [seconds] [fps]
 ##   (windowed; renders)
@@ -13,7 +13,7 @@ extends Node
 const DEFAULT_SECONDS := 1.5
 const DEFAULT_FPS := 12.0
 const FRAMES_DIR := "user://gif_frames"
-const OUTPUT_PATH := "user://recording.gif"
+const OUTPUT_DIR := "res://tests/gifs"
 
 
 func _ready() -> void:
@@ -38,7 +38,8 @@ func _ready() -> void:
 		get_viewport().get_texture().get_image().save_png("%s/frame_%03d.png" % [FRAMES_DIR, i])
 		print("captured frame %d/%d" % [i + 1, frame_count])
 
-	_assemble_gif(fps)
+	var output_name := scene_path.get_file().get_basename() + ".gif"
+	_assemble_gif(fps, output_name)
 
 
 func _clear_frames_dir() -> void:
@@ -51,9 +52,11 @@ func _clear_frames_dir() -> void:
 
 ## Two-pass ffmpeg encode (palettegen + paletteuse) for a GIF that isn't
 ## muddy -- a naive single-pass GIF encode looks noticeably worse.
-func _assemble_gif(fps: float) -> void:
+func _assemble_gif(fps: float, output_name: String) -> void:
+	DirAccess.make_dir_recursive_absolute(OUTPUT_DIR)
+
 	var frames_dir := ProjectSettings.globalize_path(FRAMES_DIR)
-	var output := ProjectSettings.globalize_path(OUTPUT_PATH)
+	var output := ProjectSettings.globalize_path(OUTPUT_DIR.path_join(output_name))
 	var palette := frames_dir.path_join("palette.png")
 	var input_pattern := frames_dir.path_join("frame_%03d.png")
 

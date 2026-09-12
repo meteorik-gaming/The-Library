@@ -141,10 +141,12 @@ instanceable scene — both worlds include it as a child:
   ```
   godot --path . res://tests/record_gif.tscn -- res://scenes/worlds/isometric_world/isometric_world.tscn 1.5 12
   ```
-  Captures frames to `user://gif_frames/`, then shells out to **ffmpeg**
-  (must be on PATH) for a two-pass palettegen/paletteuse encode — a
-  single-pass GIF encode looks noticeably muddier. Prints the final
-  `user://recording.gif` path. Defaults: 1.5s at 12fps.
+  Captures scratch frames to `user://gif_frames/`, then shells out to
+  **ffmpeg** (must be on PATH) for a two-pass palettegen/paletteuse encode —
+  a single-pass GIF encode looks noticeably muddier. Saves to
+  `tests/gifs/<scene_name>.gif` (e.g. `tests/gifs/isometric_world.gif`) —
+  gitignored, these are ad-hoc debug recordings, not curated like
+  `tests/screenshots/`. Defaults: 1.5s at 12fps.
 
 ## Typography & theme
 
