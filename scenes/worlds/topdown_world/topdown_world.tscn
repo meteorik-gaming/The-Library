@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scenes/worlds/topdown_world/topdown_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/world_chrome/world_chrome.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc.tscn" id="4"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(704, 32)
@@ -25,7 +26,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.09, 0.09, 0.11, 1)
 
-[node name="Hint" type="Label" parent="Background"]
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="HUD"]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
@@ -84,5 +87,7 @@ polygon = PackedVector2Array(-16, -352, 16, -352, 16, 352, -16, 352)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(320, 320)
+
+[node name="NPC" parent="." instance=ExtResource("4")]
 
 [node name="WorldChrome" parent="." instance=ExtResource("3")]

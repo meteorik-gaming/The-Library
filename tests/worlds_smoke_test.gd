@@ -8,6 +8,7 @@ func _ready() -> void:
 	await _screenshot("TopdownWorld", "res://scenes/worlds/topdown_world/topdown_world.tscn", "user://topdown_world.png")
 	await _screenshot("IsometricWorld", "res://scenes/worlds/isometric_world/isometric_world.tscn", "user://isometric_world.png")
 	await _check_topdown_movement()
+	await _check_topdown_npc()
 	await _check_iso_movement()
 	await _check_world_chrome_toggles()
 
@@ -75,11 +76,34 @@ func _check_topdown_movement() -> void:
 	await get_tree().process_frame
 
 
-## Holds move_up ("north") for ~1.5s and confirms: (a) it's grid-stepped
-## (lands very close to a whole multiple of a step, not a continuous slide),
-## (b) it actually goes screen top-left (both x and y decrease) per the
-## isometrized WASD spec, and (c) the NPC also moved on its own (autopilot,
-## no input) in the same window.
+## TopdownWorld's NPC now patrols on the same square grid as everything
+## else there (added alongside the isometric one, per Alan's request).
+func _check_topdown_npc() -> void:
+	var world: Node = load("res://scenes/worlds/topdown_world/topdown_world.tscn").instantiate()
+	add_child(world)
+	await get_tree().process_frame
+
+	var npc: NPC = world.get_node("NPC")
+	var start: Vector2 = npc.global_position
+	for i in 60:
+		await get_tree().physics_frame
+
+	var moved := npc.global_position.distance_to(start) > 1.0
+	print("%s  TopdownWorld NPC patrolled on its own (moved %.1fpx with no input)" % [
+		"PASS" if moved else "FAIL", npc.global_position.distance_to(start)
+	])
+
+	world.queue_free()
+	await get_tree().process_frame
+
+
+## Isometric movement is free/continuous now (not grid-stepped) — WASD is
+## just projected onto the diamond's screen-diagonal axes. Checks: (a)
+## holding move_up alone goes screen top-left (north), (b) holding move_up +
+## move_right together blends into a 3rd direction (still summed vectors,
+## not locked to one of the 4 axes) — both x and y move less far than either
+## solo axis would, since the two partially cancel — and (c) the NPC (which
+## IS still grid-stepped) patrols on its own.
 func _check_iso_movement() -> void:
 	var world: Node = load("res://scenes/worlds/isometric_world/isometric_world.tscn").instantiate()
 	add_child(world)
@@ -87,23 +111,37 @@ func _check_iso_movement() -> void:
 
 	var player: IsoPlayerMover = world.get_node("Player")
 	var npc: NPC = world.get_node("NPC")
-	var player_start: Vector2 = player.global_position
+	var solo_start: Vector2 = player.global_position
 	var npc_start: Vector2 = npc.global_position
 
 	Input.action_press("move_up")
-	for i in 90:
+	for i in 30:
 		await get_tree().physics_frame
 	Input.action_release("move_up")
-	# let any in-flight tween settle so the final position is a clean cell.
-	for i in 20:
-		await get_tree().physics_frame
+	await get_tree().physics_frame
 
-	var diff := player.global_position - player_start
-	var went_top_left := diff.x < -1.0 and diff.y < -1.0
-	var npc_moved := npc.global_position.distance_to(npc_start) > 1.0
-	print("%s  IsometricWorld move_up went screen top-left (dx=%.1f, dy=%.1f)" % [
-		"PASS" if went_top_left else "FAIL", diff.x, diff.y
+	var solo_diff := player.global_position - solo_start
+	var went_top_left := solo_diff.x < -1.0 and solo_diff.y < -1.0
+	print("%s  IsometricWorld move_up alone went screen top-left (dx=%.1f, dy=%.1f)" % [
+		"PASS" if went_top_left else "FAIL", solo_diff.x, solo_diff.y
 	])
+
+	var blend_start: Vector2 = player.global_position
+	Input.action_press("move_up")
+	Input.action_press("move_right")
+	for i in 30:
+		await get_tree().physics_frame
+	Input.action_release("move_up")
+	Input.action_release("move_right")
+	await get_tree().physics_frame
+
+	var blend_diff := player.global_position - blend_start
+	var is_blended := blend_diff.length() > 1.0 and not blend_diff.normalized().is_equal_approx(solo_diff.normalized())
+	print("%s  IsometricWorld move_up+move_right blends into a 3rd direction (dx=%.1f, dy=%.1f)" % [
+		"PASS" if is_blended else "FAIL", blend_diff.x, blend_diff.y
+	])
+
+	var npc_moved := npc.global_position.distance_to(npc_start) > 1.0
 	print("%s  IsometricWorld NPC patrolled on its own (moved %.1fpx with no input)" % [
 		"PASS" if npc_moved else "FAIL", npc.global_position.distance_to(npc_start)
 	])

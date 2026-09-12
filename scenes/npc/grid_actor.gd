@@ -1,15 +1,16 @@
-class_name IsoGridActor
+class_name GridActor
 extends CharacterBody2D
-## Base for anything that steps cell-by-cell on an isometric TileMapLayer
-## grid (the player mover and NPCs both extend this). Movement is one full
-## cell at a time, tweened smoothly between cells rather than continuous
-## free-roam — the isometric counterpart to the free CharacterBody2D
-## movement used in scenes/player/.
+## Base for anything that steps cell-by-cell on a grid — used by NPCs in
+## both the isometric room (diamond grid, positions from a TileMapLayer) and
+## the top-down room (plain square grid, positions from cell * CELL_SIZE).
+## Movement is one full cell at a time, tweened smoothly between cells.
+## `cell_to_world` is a Callable(Vector2i) -> Vector2 so this doesn't need
+## to know which kind of room it's in.
 
 const STEP_DURATION := 0.16
 
-var floor_layer: TileMapLayer
 var grid_cell: Vector2i
+var cell_to_world: Callable
 var is_walkable: Callable = func(_cell: Vector2i) -> bool: return true
 
 var _moving := false
@@ -17,11 +18,11 @@ var _tween: Tween
 
 
 ## Called once by the world after instancing, before any movement happens.
-func setup(layer: TileMapLayer, start_cell: Vector2i, walkable_check: Callable) -> void:
-	floor_layer = layer
+func setup(start_cell: Vector2i, cell_to_world_fn: Callable, walkable_check: Callable) -> void:
+	cell_to_world = cell_to_world_fn
 	grid_cell = start_cell
 	is_walkable = walkable_check
-	global_position = floor_layer.map_to_local(grid_cell)
+	global_position = cell_to_world.call(grid_cell)
 
 
 func is_moving() -> bool:
@@ -40,7 +41,7 @@ func try_step(direction: Vector2i) -> void:
 
 	_moving = true
 	grid_cell = target_cell
-	var target_pos: Vector2 = floor_layer.map_to_local(target_cell)
+	var target_pos: Vector2 = cell_to_world.call(target_cell)
 
 	if _tween:
 		_tween.kill()

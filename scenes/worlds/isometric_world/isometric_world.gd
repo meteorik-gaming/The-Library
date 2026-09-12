@@ -1,9 +1,10 @@
 extends Node2D
 ## Isometric equivalent of scenes/worlds/topdown_world/ — same 10x10 walled
 ## room spec, built on an isometric TileSet (64x32 diamond tiles) instead of
-## flat rectangles. Movement here is grid-stepped (see IsoGridActor) instead
-## of free-roam, with WASD assigned to screen directions rather than raw grid
-## axes — see iso_player_mover.gd for the mapping.
+## flat rectangles. The player moves freely (continuous, vector-summed WASD)
+## like in Top-Down, just projected onto the diamond's own screen-diagonal
+## axes instead of straight up/down/left/right — see iso_player_mover.gd.
+## The NPC still steps cell-by-cell (see scenes/npc/grid_actor.gd).
 
 const MAIN_MENU_SCENE := "res://scenes/main_menu/main_menu.tscn"
 const ROOM_CELLS := 10
@@ -22,10 +23,10 @@ func _ready() -> void:
 	_build_room()
 
 	var axes := _compute_screen_axes()
-	var start_cell := Vector2i(ROOM_CELLS / 2, ROOM_CELLS / 2)
-	player.setup(floor_layer, start_cell, _is_walkable)
-	player.set_axes(axes)
-	npc.configure_at_cells(floor_layer, Vector2i(3, 3), Vector2i(6, 3), _is_walkable)
+	player.global_position = floor_layer.map_to_local(Vector2i(ROOM_CELLS / 2, ROOM_CELLS / 2))
+	player.set_iso_axes(axes["north"], axes["east"])
+
+	npc.configure_at_cells(floor_layer.map_to_local, Vector2i(3, 3), Vector2i(6, 3), _is_walkable)
 
 	_configure_camera()
 
@@ -49,32 +50,32 @@ func _is_walkable(cell: Vector2i) -> bool:
 	return cell.x >= 0 and cell.x < ROOM_CELLS and cell.y >= 0 and cell.y < ROOM_CELLS
 
 
-## Figures out, from the TileSet's actual isometric projection, which raw
-## grid delta (+X/-X/+Y/-Y) lands in each screen quadrant — rather than
+## Figures out, from the TileSet's actual isometric projection, which
+## SCREEN direction each raw grid delta (+X/-X/+Y/-Y) lands in — rather than
 ## assuming Godot's tile_layout sign convention. North/south/east/west are
 ## named by where they land on screen: north = top-left, south =
-## bottom-right, west = bottom-left, east = top-right (per the diamond
-## room's diagonal axes).
+## bottom-right, west = bottom-left, east = top-right (the diamond room's
+## diagonal axes) — returned as normalized world-space direction vectors for
+## IsoPlayerMover's continuous movement.
 func _compute_screen_axes() -> Dictionary:
 	var origin: Vector2 = floor_layer.map_to_local(Vector2i.ZERO)
-	var candidates := {
-		Vector2i(1, 0): floor_layer.map_to_local(Vector2i(1, 0)) - origin,
-		Vector2i(-1, 0): floor_layer.map_to_local(Vector2i(-1, 0)) - origin,
-		Vector2i(0, 1): floor_layer.map_to_local(Vector2i(0, 1)) - origin,
-		Vector2i(0, -1): floor_layer.map_to_local(Vector2i(0, -1)) - origin,
-	}
+	var candidates := [
+		floor_layer.map_to_local(Vector2i(1, 0)) - origin,
+		floor_layer.map_to_local(Vector2i(-1, 0)) - origin,
+		floor_layer.map_to_local(Vector2i(0, 1)) - origin,
+		floor_layer.map_to_local(Vector2i(0, -1)) - origin,
+	]
 
 	var axes := {}
-	for cell_delta: Vector2i in candidates:
-		var screen_delta: Vector2 = candidates[cell_delta]
+	for screen_delta: Vector2 in candidates:
 		if screen_delta.x < 0 and screen_delta.y < 0:
-			axes["north"] = cell_delta
+			axes["north"] = screen_delta.normalized()
 		elif screen_delta.x > 0 and screen_delta.y > 0:
-			axes["south"] = cell_delta
+			axes["south"] = screen_delta.normalized()
 		elif screen_delta.x < 0 and screen_delta.y > 0:
-			axes["west"] = cell_delta
+			axes["west"] = screen_delta.normalized()
 		elif screen_delta.x > 0 and screen_delta.y < 0:
-			axes["east"] = cell_delta
+			axes["east"] = screen_delta.normalized()
 	return axes
 
 

@@ -33,23 +33,34 @@ catalog — this file tracks what exists, where it lives, and its status.
 - **Isometric world** — `scenes/worlds/isometric_world/` — same 10x10
   walled-room spec, built procedurally (`_build_room()` at runtime) on an
   isometric `TileSet` (`assets/tiles/iso_tileset.tres`, 64x32 diamond tiles).
-  Two `TileMapLayer`s (floor, Y-sorted walls). Movement is **grid-stepped**,
-  not free-roam — see below.
-- **Isometric grid movement** — `scenes/worlds/isometric_world/iso_grid_actor.gd`
-  (`IsoGridActor`, base class: one-cell-at-a-time tweened stepping) +
-  `iso_player_mover.gd` (`IsoPlayerMover`, WASD-driven). WASD is mapped to
-  *screen* direction rather than raw grid axis — the room script empirically
-  derives which grid delta lands in which screen quadrant from the TileSet's
-  actual isometric projection (`_compute_screen_axes()` in
-  `isometric_world.gd`), rather than assuming Godot's `tile_layout` sign
-  convention. Result: W = north = screen top-left, S = south = screen
-  bottom-right, A = west = screen bottom-left, D = east = screen top-right.
-- **Generic NPC** — `scenes/npc/npc.gd`/`.tscn` — extends `IsoGridActor`,
-  patrols back and forth between two `Marker2D` anchor points on the grid
-  (`AnchorA`/`AnchorB`), pausing at each. No schedule/time-of-day routing
-  yet (just the 2 fixed anchors). Reacts to the player entering its
-  `ProximityArea` with a small squash tween. One is placed in the isometric
-  world; not yet in Top-Down (which has no grid to step on).
+  Two `TileMapLayer`s (floor, Y-sorted walls). Player movement is free/
+  continuous like Top-Down (see below); the NPC is grid-stepped.
+- **Isometric player movement** — `scenes/worlds/isometric_world/iso_player_mover.gd`
+  (`IsoPlayerMover`) — free continuous `CharacterBody2D` movement (same
+  corner-assist idea as the shared Player), except WASD is projected onto
+  the room's own screen-diagonal axes instead of straight screen up/down/
+  left/right, so it still reads as N/S/E/W on the diamond while keeping
+  normal vector-summed blending (e.g. holding two keys together blends
+  smoothly into a third direction, it doesn't snap to one axis). The room
+  script empirically derives which grid delta lands in which screen
+  quadrant from the TileSet's actual isometric projection
+  (`_compute_screen_axes()` in `isometric_world.gd`), rather than assuming
+  Godot's `tile_layout` sign convention. Result: W = north = screen
+  top-left, S = south = screen bottom-right, A = west = screen bottom-left,
+  D = east = screen top-right.
+- **Grid-stepped actor base** — `scenes/npc/grid_actor.gd` (`GridActor`) —
+  one-cell-at-a-time tweened movement for anything that should snap to a
+  grid, room-shape-agnostic: takes a `cell_to_world: Callable` so the same
+  class drives NPCs on both the isometric room's diamond grid
+  (`TileMapLayer.map_to_local`) and Top-Down's plain square grid
+  (`cell * CELL_SIZE`).
+- **Generic NPC** — `scenes/npc/npc.gd`/`.tscn` — extends `GridActor`,
+  patrols back and forth between two grid cells (`configure_at_cells()`),
+  pausing at each; `AnchorA`/`AnchorB` markers are repositioned to match for
+  inspection. No schedule/time-of-day routing yet (just the 2 fixed
+  anchors). Reacts to the player entering its `ProximityArea` with a small
+  squash tween. One instance in each world (isometric: diamond grid,
+  top-down: square grid) — same scene, different `cell_to_world`.
 - **Placeholder iso tile generator** — `tools/gen_iso_placeholder_tiles.gd` —
   `@tool` `EditorScript` that (re)draws the flat-colour diamond floor/wall
   tiles (File > Run in the editor). Swap for real pixel art later.
@@ -132,5 +143,4 @@ instanceable scene — both worlds include it as a child:
   system when it's actually needed.
 - No save/load system for gameplay state yet (GameClock has no
   save/load-state methods either — add them alongside the save system).
-- NPC has no schedule/time-of-day routing yet, just the 2 fixed anchors; no
-  Top-Down (non-grid) NPC variant yet either.
+- NPC has no schedule/time-of-day routing yet, just the 2 fixed anchors.

@@ -22,7 +22,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.09, 0.09, 0.11, 1)
 
-[node name="Hint" type="Label" parent="Background"]
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Hint" type="Label" parent="HUD"]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0

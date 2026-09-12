@@ -1,8 +1,10 @@
 class_name NPC
-extends IsoGridActor
+extends GridActor
 ## Generic placeholder NPC that walks back and forth between two anchor
-## points on the isometric grid. No schedule/time-of-day routing yet — see
-## the AnchorA/AnchorB children for the two spots it patrols between.
+## points on a grid (works in both the isometric and top-down rooms — see
+## configure_at_cells()). No schedule/time-of-day routing yet, just the two
+## fixed anchors. AnchorA/AnchorB are repositioned to match at configure
+## time, purely so they're accurate if you inspect the scene.
 
 @export var pause_seconds := 1.2
 
@@ -18,22 +20,18 @@ var _waiting := false
 var _react_tween: Tween
 
 
-## Called by the world after instancing, mirroring Player's setup() but
-## deriving the start/anchor cells from the AnchorA/AnchorB marker positions
-## (drag those two nodes in the editor to set the patrol span).
-func configure(layer: TileMapLayer, walkable_check: Callable) -> void:
-	var cell_a := layer.local_to_map(layer.to_local(anchor_a.global_position))
-	var cell_b := layer.local_to_map(layer.to_local(anchor_b.global_position))
-	configure_at_cells(layer, cell_a, cell_b, walkable_check)
-
-
-## Alternative to configure() for callers that already know the exact grid
-## cells to patrol between (e.g. a room script placing an NPC by coordinate
-## rather than by hand-positioned markers).
-func configure_at_cells(layer: TileMapLayer, cell_a: Vector2i, cell_b: Vector2i, walkable_check: Callable) -> void:
+## Called by the world after instancing with the two grid cells to patrol
+## between, plus the same cell_to_world/walkable_check the room uses for
+## its own actors (TileMapLayer.map_to_local for isometric, cell * CELL_SIZE
+## for top-down — see GridActor).
+func configure_at_cells(cell_to_world_fn: Callable, cell_a: Vector2i, cell_b: Vector2i, walkable_check: Callable) -> void:
 	_cell_a = cell_a
 	_cell_b = cell_b
-	setup(layer, cell_a, walkable_check)
+	var pos_a: Vector2 = cell_to_world_fn.call(cell_a)
+	var pos_b: Vector2 = cell_to_world_fn.call(cell_b)
+	anchor_a.position = Vector2.ZERO
+	anchor_b.position = pos_b - pos_a
+	setup(cell_a, cell_to_world_fn, walkable_check)
 
 
 func _ready() -> void:
@@ -41,7 +39,7 @@ func _ready() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if floor_layer == null or is_moving() or _waiting:
+	if not cell_to_world.is_valid() or is_moving() or _waiting:
 		return
 
 	var target_cell := _cell_b if _target_is_b else _cell_a
