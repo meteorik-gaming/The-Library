@@ -63,6 +63,38 @@ func play_animation(animation_type: String, direction: String) -> void:
 	_play(direction, animation_type)
 
 
+## Whichever direction was last actually faced (walking or otherwise) — for
+## callers (e.g. Attack/Interact input) that want "face whatever way the
+## character is currently facing" without tracking it themselves.
+func get_current_direction() -> String:
+	return _current_direction
+
+
+## Seconds for one playthrough of `animation_type` facing `direction`, from
+## its frame count / playback speed -- every CharacterSprite animation loops
+## (see CHARACTER_SPRITES.md), so this is how a caller times a one-shot
+## action (Attack/Interact) instead of it looping forever. Returns 0.0 if
+## that sheet/direction combo doesn't exist.
+func get_animation_duration(animation_type: String, direction: String) -> float:
+	if sprite_frames == null:
+		return 0.0
+
+	var anim_name: String
+	if animation_type == "Rotate":
+		anim_name = "Rotate"
+	elif _row_map.has(direction):
+		anim_name = "%s_%s" % [animation_type, ROW_NAMES[_row_map[direction]["row"]]]
+	else:
+		return 0.0
+
+	if not sprite_frames.has_animation(anim_name):
+		return 0.0
+	var speed := sprite_frames.get_animation_speed(anim_name)
+	if speed <= 0.0:
+		return 0.0
+	return sprite_frames.get_frame_count(anim_name) / speed
+
+
 func _play(direction: String, animation_type: String) -> void:
 	if sprite_frames == null:
 		return

@@ -13,6 +13,9 @@ func _ready() -> void:
 	options_button.pressed.connect(_on_options_pressed)
 	quit_button.pressed.connect(_on_quit_pressed)
 
+	for b in [play_button, options_button, quit_button]:
+		UiKit.add_hover_scale(b)
+
 
 func _on_play_pressed() -> void:
 	var screen: ChooseWorldTypeScreen = ScreenBase.open(preload(CHOOSE_WORLD_TYPE_SCENE).instantiate())

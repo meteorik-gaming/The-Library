@@ -5,6 +5,36 @@ Not strict semver — versioning here tracks how The Library grows:
 existing system. There was never a formal release before this, so the
 current, already-substantial state starts at **1.0.0** rather than 0.1.0.
 
+## [1.1.0] - 2026-09-12
+
+### Added
+- Shared tabbed Pausa/Inventario/Keybinds/Opciones menu
+  (`scenes/screens/tab_strip.gd`/`pause_menu.gd`) — ESC opens on Pausa, E
+  opens on Inventario, every tab reachable from either entry point. Opening
+  it is a real pause (`get_tree().paused = true`); the Keybinds panel now
+  lives as a tab instead of its own E-toggled overlay
+- Character rotate preview in the Inventario tab — plays the `Rotate` sheet
+  with ◀/⏸/▶ controls: flips spin direction while playing, steps one frame
+  at a time while paused
+- Options persistence (`autoload/options_store.gd`) — volume/fullscreen
+  saved to `user://options.cfg`, applied automatically at boot
+- Main Menu hover feedback (`UiKit.add_hover_scale()`) — subtle scale-up +
+  glow on any button
+- Click-to-attack (left click) / click-to-interact (right click) — plays the
+  `Attack`/`Interact` sheets for one timed playthrough, facing the
+  character's current direction, in both worlds
+
+### Fixed
+- Both worlds' decorative `Background/Void` `ColorRect` defaulted to
+  `mouse_filter = STOP` and silently swallowed every click in the game,
+  game-wide, since it was first added — surfaced while wiring up
+  click-to-attack
+- `PauseMenu`'s backdrop/panel weren't actually blocking/allowing input in
+  sync with the menu's own visibility toggle
+- Inventario's character preview showing `Idle` instead of `Rotate` — it was
+  configured before its subtree entered the scene tree, so the animation
+  switch silently no-op'd before `_ready()`'s own default overwrote it
+
 ## [1.0.0] - 2026-09-12
 
 The first versioned snapshot — everything built so far. See

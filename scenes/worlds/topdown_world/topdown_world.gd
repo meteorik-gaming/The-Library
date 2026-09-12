@@ -3,7 +3,6 @@ extends Node2D
 ## ChooseWorldTypeScreen, for prototyping mechanics before any art exists.
 ## See scenes/worlds/isometric_world/ for the isometric equivalent.
 
-const MAIN_MENU_SCENE := "res://scenes/main_menu/main_menu.tscn"
 const CELL_SIZE := 64.0
 const ROOM_CELLS := 10
 const ROOM_SIZE := CELL_SIZE * ROOM_CELLS
@@ -44,8 +43,3 @@ func _build_nav_grid() -> AStarGrid2D:
 	nav_grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	nav_grid.update()
 	return nav_grid
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().change_scene_to_file(MAIN_MENU_SCENE)

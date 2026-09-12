@@ -11,24 +11,64 @@ func _ready() -> void:
 	await _check_topdown_npc()
 	await _check_iso_movement()
 	await _check_world_chrome_toggles()
+	await _check_pause_freezes_world()
+	await _check_attack_interact()
 
 	print("\nOK")
 	get_tree().quit()
 
 
-## Confirms the Q (devtools grid overlay) and E (keybinds panel) toggles
-## from world_chrome actually flip their target's visibility, not just that
-## the scene builds.
+## Confirms left/right click actually reach the player (not just that the
+## input actions exist) -- regression check for a real bug where each
+## world's Background/Void full-rect ColorRect defaulted to
+## mouse_filter=STOP and silently swallowed every click in the game, even
+## though nothing was ever visibly wrong (no error, no dialog -- clicks just
+## did nothing). Both worlds have their own Void, so both are checked.
+func _check_attack_interact() -> void:
+	for world_data in [
+		["TopdownWorld", "res://scenes/worlds/topdown_world/topdown_world.tscn"],
+		["IsometricWorld", "res://scenes/worlds/isometric_world/isometric_world.tscn"],
+	]:
+		var label: String = world_data[0]
+		var world: Node = load(world_data[1]).instantiate()
+		add_child(world)
+		await get_tree().process_frame
+
+		var player: CharacterBody2D = world.get_node("Player")
+
+		_fire_action("attack")
+		await get_tree().process_frame
+		var attacked: bool = player.sprite.animation.begins_with("Attack_")
+		print("%s  %s: attack click reaches the player (animation=%s)" % [
+			"PASS" if attacked else "FAIL", label, player.sprite.animation
+		])
+
+		_fire_action("interact")
+		await get_tree().process_frame
+		var interacted: bool = player.sprite.animation.begins_with("Interact_")
+		print("%s  %s: interact click reaches the player (animation=%s)" % [
+			"PASS" if interacted else "FAIL", label, player.sprite.animation
+		])
+
+		world.queue_free()
+		await get_tree().process_frame
+
+
+## Confirms the Q (devtools grid overlay) toggle still works, and that ESC/E
+## open the shared PauseMenu on the expected tab (Pausa/Inventario) and
+## close it again.
 func _check_world_chrome_toggles() -> void:
+	get_tree().paused = false  # safety net in case a prior check left this stuck
+
 	var world: Node = load("res://scenes/worlds/topdown_world/topdown_world.tscn").instantiate()
 	add_child(world)
 	await get_tree().process_frame
 
 	var devtools_overlay: Node2D = world.get_node("WorldChrome/DevToolsOverlay")
-	var keybinds_ui: CanvasLayer = world.get_node("WorldChrome/KeybindsUI")
+	var pause_menu: PauseMenu = world.get_node("WorldChrome/PauseMenu")
 
 	print("%s  DevToolsOverlay starts hidden" % ("PASS" if not devtools_overlay.visible else "FAIL"))
-	print("%s  KeybindsUI starts hidden" % ("PASS" if not keybinds_ui.visible else "FAIL"))
+	print("%s  PauseMenu starts hidden" % ("PASS" if not pause_menu.visible else "FAIL"))
 
 	_fire_action("toggle_devtools")
 	await get_tree().process_frame
@@ -36,12 +76,85 @@ func _check_world_chrome_toggles() -> void:
 		"PASS" if DevTools.enabled and devtools_overlay.visible else "FAIL", DevTools.enabled, devtools_overlay.visible
 	])
 
-	_fire_action("toggle_stats")
+	_fire_action("ui_cancel")
 	await get_tree().process_frame
-	print("%s  E toggles KeybindsUI on (visible=%s)" % [
-		"PASS" if keybinds_ui.visible else "FAIL", keybinds_ui.visible
+	print("%s  ESC opens PauseMenu on Pausa tab, paused (visible=%s, paused=%s, pausa_tab.visible=%s)" % [
+		"PASS" if pause_menu.visible and get_tree().paused and pause_menu.pausa_tab.visible else "FAIL",
+		pause_menu.visible, get_tree().paused, pause_menu.pausa_tab.visible
 	])
 
+	_fire_action("ui_cancel")
+	await get_tree().process_frame
+	print("%s  ESC closes PauseMenu again, unpaused (visible=%s, paused=%s)" % [
+		"PASS" if not pause_menu.visible and not get_tree().paused else "FAIL", pause_menu.visible, get_tree().paused
+	])
+
+	_fire_action("toggle_stats")
+	await get_tree().process_frame
+	print("%s  E opens PauseMenu on Inventario tab, paused (visible=%s, paused=%s, inventario_tab.visible=%s)" % [
+		"PASS" if pause_menu.visible and get_tree().paused and pause_menu.inventario_tab.visible else "FAIL",
+		pause_menu.visible, get_tree().paused, pause_menu.inventario_tab.visible
+	])
+
+	_fire_action("toggle_stats")
+	await get_tree().process_frame
+	print("%s  E closes PauseMenu again, unpaused (visible=%s, paused=%s)" % [
+		"PASS" if not pause_menu.visible and not get_tree().paused else "FAIL", pause_menu.visible, get_tree().paused
+	])
+
+	get_tree().paused = false
+	world.queue_free()
+	await get_tree().process_frame
+
+
+## Confirms opening the PauseMenu is a REAL pause: NPC movement and
+## GameClock's elapsed time both freeze while it's open, and resume once
+## it's closed. Snapshots are taken a few frames AFTER opening (not at the
+## instant ui_cancel fires) -- a step tween or GameClock tick that was
+## already mid-flight the instant pause engages is expected to finish
+## settling over a couple of frames; what actually matters is that nothing
+## moves any further once things have settled into the paused state.
+func _check_pause_freezes_world() -> void:
+	get_tree().paused = false  # safety net in case a prior check left this stuck
+
+	var world: Node = load("res://scenes/worlds/topdown_world/topdown_world.tscn").instantiate()
+	add_child(world)
+	await get_tree().process_frame
+
+	var npc: NPC = world.get_node("NPC")
+
+	_fire_action("ui_cancel")  # open, paused = true
+	await get_tree().process_frame
+	for i in 5:
+		await get_tree().physics_frame
+
+	var npc_settled: Vector2 = npc.global_position
+	var hours_settled: float = GameClock.elapsed_hours_today
+
+	for i in 30:
+		await get_tree().physics_frame
+
+	var npc_frozen := npc.global_position.distance_to(npc_settled) < 0.01
+	var clock_frozen := is_equal_approx(GameClock.elapsed_hours_today, hours_settled)
+	print("%s  Pausing freezes NPC movement (moved %.4fpx after settling paused)" % [
+		"PASS" if npc_frozen else "FAIL", npc.global_position.distance_to(npc_settled)
+	])
+	print("%s  Pausing freezes GameClock (elapsed_hours_today stayed %.4f)" % [
+		"PASS" if clock_frozen else "FAIL", GameClock.elapsed_hours_today
+	])
+
+	_fire_action("ui_cancel")  # close, paused = false
+	await get_tree().process_frame
+
+	for i in 10:
+		await get_tree().physics_frame
+
+	var clock_resumed := GameClock.elapsed_hours_today > hours_settled
+	print("%s  Closing resumes GameClock (elapsed_hours_today now %.4f)" % [
+		"PASS" if clock_resumed else "FAIL", GameClock.elapsed_hours_today
+	])
+
+	get_tree().paused = false
 	world.queue_free()
 	await get_tree().process_frame
 

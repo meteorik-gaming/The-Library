@@ -13,12 +13,43 @@ catalog — this file tracks what exists, where it lives, and its status.
   `scenes/screens/ui_kit.gd` (`UiKit`) — generic dimmed-backdrop + centered
   panel chrome for any secondary screen. `ScreenBase.open()` adds a screen on
   top of whatever's current; screens emit `closed` (or their own signal) when
-  done.
+  done. `UiKit.add_hover_scale()` wires a reusable hover-in feedback (subtle
+  scale-up + glow) onto any `Control` — used by Main Menu's buttons.
 - **Choose World Type screen** — `scenes/screens/choose_world_type_screen.gd`
   — card-picker pattern (locked vs. selectable cards). Currently offers
   Top-Down and Isometric.
 - **Options screen** — `scenes/screens/options_screen.gd` — master volume +
-  fullscreen toggle. Applies live; **not persisted to disk yet**.
+  fullscreen toggle. Reads/writes through `autoload/options_store.gd`
+  (`OptionsStore`), which applies changes live and persists them to
+  `user://options.cfg`, applying the saved settings at boot regardless of
+  whether Options is ever opened.
+- **Shared Pausa/Inventario/Keybinds/Opciones menu** —
+  `scenes/screens/tab_strip.gd` (`TabStrip`, a generic reusable tab strip —
+  named to avoid colliding with Godot's own built-in `TabBar` control) +
+  `scenes/screens/pause_menu.gd` (`PauseMenu`) — lives resident inside
+  `scenes/world_chrome/world_chrome.tscn`, toggled by `visible` rather than
+  spawned/freed like `ScreenBase` screens. ESC opens it on the Pausa tab, E
+  (`toggle_stats`) opens it on the Inventario tab; once open, every tab is
+  reachable by clicking regardless of entry point. Opening it is a **real
+  pause** (`get_tree().paused = true`) — `PauseMenu` is the only node under
+  `WorldChrome` set to `PROCESS_MODE_ALWAYS`, so everything else (NPCs,
+  `GameClock`/day-night, etc.) freezes for free with no per-node opt-out
+  needed. The Keybinds panel (`scenes/world_chrome/keybinds_panel.gd`) now
+  lives as the Keybinds tab instead of its own E-toggled overlay. Inventario
+  is a **placeholder shell only** — a grid of empty bordered slots (no item
+  data model yet, see Deliberately deferred below), plus a character preview
+  panel on the right playing the `Rotate` sheet (see Character sprites
+  below): ◀/⏸/▶ buttons under it — while playing, ◀/▶ flip which way the
+  loop spins (`CharacterSprite.speed_scale` ±1); while paused (`speed_scale`
+  0), ◀/▶ instead step it one frame at a time via `sprite.frame` directly,
+  for manually posing it.
+- **Click-to-attack / click-to-interact** — `scenes/player/player.gd` /
+  `scenes/worlds/isometric_world/iso_player_mover.gd` — left click plays the
+  `Attack` sheet, right click plays `Interact`, facing whichever direction
+  `CharacterSprite.get_current_direction()` reports, for one playthrough
+  (timed from `CharacterSprite.get_animation_duration()`, since every sheet
+  loops) before movement-driven Idle/Walk resumes. No cooldown/hit-detection/
+  gating yet — just the frames wired up to input for a visual test.
 
 ## Player, NPCs & worlds
 
@@ -30,7 +61,13 @@ catalog — this file tracks what exists, where it lives, and its status.
   below.
 - **Top-Down world** — `scenes/worlds/topdown_world/` — flat-color 10x10
   walled room (no tiles/textures), built from plain `Polygon2D` +
-  `StaticBody2D` walls. Free-roam movement (see above).
+  `StaticBody2D` walls. Free-roam movement (see above). Its `Background/Void`
+  full-rect `ColorRect` needs `mouse_filter = MOUSE_FILTER_IGNORE` explicitly
+  — a `Control`'s default filter is `STOP`, so a full-screen decorative
+  `ColorRect` like this silently swallows every click in the game if left at
+  the default (found while wiring up click-to-attack: nothing errored, clicks
+  just did nothing anywhere). Same fix applies to Isometric's own
+  `Background/Void` below.
 - **Isometric world** — `scenes/worlds/isometric_world/` — same 10x10
   walled-room spec, built procedurally (`_build_room()` at runtime) on an
   isometric `TileSet` (`assets/tiles/iso_tileset.tres`, 64x32 diamond tiles).
@@ -172,11 +209,13 @@ instanceable scene — both worlds include it as a child:
 
 - Isometric world's wall/floor art is placeholder-only; real pixel art is a
   separate pass.
-- Options screen has no save/load — add a `ConfigFile`-backed settings
-  system when it's actually needed.
 - No save/load system for gameplay state yet (GameClock has no
   save/load-state methods either — add them alongside the save system).
 - NPC has no schedule/time-of-day routing yet, just the 2 fixed anchors.
+- Inventario tab is a visual shell only — no `Item` resource, no slot data,
+  no drag/drop. Add the data model as its own pass once there's something to
+  put in it.
 - **Next up: menu aesthetics.** The menu screens (Main Menu, Choose World
-  Type, Options) are functional but visually plain — a real pass on button
-  styling/layout/polish is the next planned step.
+  Type, Options, the new Pausa/Inventario/Keybinds/Opciones menu) are
+  functional but visually plain beyond the Main Menu's hover feedback — a
+  real pass on button styling/layout/polish is still the next planned step.

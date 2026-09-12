@@ -6,7 +6,6 @@ extends Node2D
 ## axes instead of straight up/down/left/right — see iso_player_mover.gd.
 ## The NPC still steps cell-by-cell (see scenes/npc/grid_actor.gd).
 
-const MAIN_MENU_SCENE := "res://scenes/main_menu/main_menu.tscn"
 const ROOM_CELLS := 10
 const FLOOR_SOURCE_ID := 0
 const WALL_SOURCE_ID := 1
@@ -109,8 +108,3 @@ func _configure_camera() -> void:
 	camera.limit_top = min_pos.y - CAMERA_MARGIN
 	camera.limit_right = max_pos.x + CAMERA_MARGIN
 	camera.limit_bottom = max_pos.y + CAMERA_MARGIN
-
-
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel"):
-		get_tree().change_scene_to_file(MAIN_MENU_SCENE)

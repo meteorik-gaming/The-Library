@@ -24,6 +24,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 color = Color(0.09, 0.09, 0.11, 1)
 
 [node name="HUD" type="CanvasLayer" parent="."]
@@ -39,7 +40,7 @@ offset_bottom = -20.0
 grow_horizontal = 2
 grow_vertical = 0
 horizontal_alignment = 1
-text = "WASD/Flechas para moverte — Esc para volver al menú"
+text = "WASD/Flechas para moverte — Esc para pausar, E para inventario"
 
 [node name="Floor" type="Polygon2D" parent="."]
 color = Color(0.16, 0.16, 0.2, 1)

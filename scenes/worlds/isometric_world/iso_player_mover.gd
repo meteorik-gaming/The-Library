@@ -19,6 +19,7 @@ const CORNER_ASSIST_STEP := 1.0
 var _north := Vector2.UP
 var _east := Vector2.RIGHT
 var _facing := DirectionalFacing.new()
+var _action_end_msec := 0
 
 
 func set_iso_axes(north: Vector2, east: Vector2) -> void:
@@ -34,11 +35,32 @@ func _physics_process(_delta: float) -> void:
 	move_and_slide()
 
 	_facing.update()
+	if Time.get_ticks_msec() < _action_end_msec:
+		return  # let the Attack/Interact animation play out undisturbed
+
 	var facing_direction := _facing.current_direction()
 	if facing_direction != "":
 		sprite.play_moving(facing_direction)
 	else:
 		sprite.play_idle()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("attack"):
+		_play_action("Attack")
+	elif event.is_action_pressed("interact"):
+		_play_action("Interact")
+
+
+## Plays a one-shot Attack/Interact facing whatever direction the sprite is
+## currently facing, then lets normal movement-driven animation resume. No
+## cooldown/hit-detection/gating yet -- just the frames wired up to input for
+## a visual test; movement keeps working underneath.
+func _play_action(animation_type: String) -> void:
+	var direction := sprite.get_current_direction()
+	sprite.play_animation(animation_type, direction)
+	var duration := sprite.get_animation_duration(animation_type, direction)
+	_action_end_msec = Time.get_ticks_msec() + int(duration * 1000.0)
 
 
 ## Same idea as scenes/player/player.gd's corner assist, just working in the

@@ -9,7 +9,7 @@ const BINDING_LABELS := {
 	"move_right:key": "Move Right",
 	"move_up:key": "Move Up",
 	"move_down:key": "Move Down",
-	"toggle_stats:key": "Toggle This Panel",
+	"toggle_stats:key": "Open Menu (Inventory)",
 	"toggle_devtools:key": "Devtools Overlay",
 	"dialogic_default_action:key": "Advance Dialogue",
 }
