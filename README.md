@@ -7,7 +7,8 @@ in its own right.
 
 Everything here is intentionally generic: no story, no characters, no
 identifiable IP — just mechanics and placeholder visuals. See
-[SYSTEMS.md](SYSTEMS.md) for the full, current list of what's implemented.
+[SYSTEMS.md](SYSTEMS.md) for the full, current list of what's implemented,
+and [CHANGELOG.md](CHANGELOG.md) for how it got there.
 
 ## Requirements
 

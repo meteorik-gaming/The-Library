@@ -177,3 +177,6 @@ instanceable scene — both worlds include it as a child:
 - No save/load system for gameplay state yet (GameClock has no
   save/load-state methods either — add them alongside the save system).
 - NPC has no schedule/time-of-day routing yet, just the 2 fixed anchors.
+- **Next up: menu aesthetics.** The menu screens (Main Menu, Choose World
+  Type, Options) are functional but visually plain — a real pass on button
+  styling/layout/polish is the next planned step.

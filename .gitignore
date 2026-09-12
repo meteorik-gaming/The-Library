@@ -2,6 +2,8 @@
 .godot/
 /android/
 
-# Ad-hoc debug recordings from tests/record_gif.gd -- not curated like
-# tests/screenshots/, don't belong in repo history.
+# Ad-hoc debug recordings from tests/record_gif.gd, and the smoke-test
+# screenshots -- both are for local marketing/debugging use, not needed in
+# git history.
 /tests/gifs/
+/tests/screenshots/
