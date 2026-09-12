@@ -14,8 +14,11 @@ const SPEED := 220.0
 const CORNER_ASSIST_MAX := 3.0
 const CORNER_ASSIST_STEP := 1.0
 
+@onready var sprite: CharacterSprite = $Sprite
+
 var _north := Vector2.UP
 var _east := Vector2.RIGHT
+var _facing := DirectionalFacing.new()
 
 
 func set_iso_axes(north: Vector2, east: Vector2) -> void:
@@ -29,6 +32,13 @@ func _physics_process(_delta: float) -> void:
 	velocity = direction * SPEED
 	_apply_corner_assist(direction)
 	move_and_slide()
+
+	_facing.update()
+	var facing_direction := _facing.current_direction()
+	if facing_direction != "":
+		sprite.play_moving(facing_direction)
+	else:
+		sprite.play_idle()
 
 
 ## Same idea as scenes/player/player.gd's corner assist, just working in the

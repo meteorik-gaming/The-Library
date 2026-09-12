@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://eshllwur7ok8"
-path="res://.godot/imported/Interact-Sheet.png-45e08be5689b7389a3555c9785589441.ctex"
+uid="uid://d2r6m2btylrbq"
+path="res://.godot/imported/Template-Run-Sheet.png-3c4fa8779d2458be016239a8d7a82e98.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/Interact-Sheet.png"
-dest_files=["res://.godot/imported/Interact-Sheet.png-45e08be5689b7389a3555c9785589441.ctex"]
+source_file="res://assets/characters/Template-Run-Sheet.png"
+dest_files=["res://.godot/imported/Template-Run-Sheet.png-3c4fa8779d2458be016239a8d7a82e98.ctex"]
 
 [params]
 

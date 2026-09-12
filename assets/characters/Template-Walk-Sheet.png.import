@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4dt7jjqcycn4"
-path="res://.godot/imported/Attack-Sheet.png-96ed5959b8f7123f4f6700991e6538a5.ctex"
+uid="uid://bk1xepgvwl27c"
+path="res://.godot/imported/Template-Walk-Sheet.png-703e40bbdc0a666e393690a7fcfb5327.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/Attack-Sheet.png"
-dest_files=["res://.godot/imported/Attack-Sheet.png-96ed5959b8f7123f4f6700991e6538a5.ctex"]
+source_file="res://assets/characters/Template-Walk-Sheet.png"
+dest_files=["res://.godot/imported/Template-Walk-Sheet.png-703e40bbdc0a666e393690a7fcfb5327.ctex"]
 
 [params]
 

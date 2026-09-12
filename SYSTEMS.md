@@ -25,8 +25,9 @@ catalog — this file tracks what exists, where it lives, and its status.
 - **Shared player controller** — `scenes/player/player.gd`/`.tscn` — free-roam
   `CharacterBody2D` with corner-assist movement (softens tight-corner turns
   so they don't need pixel-precise alignment), driven by the
-  `move_left/right/up/down` input actions. Used by Top-Down. No walk-cycle
-  art yet, so it's just a placeholder square.
+  `move_left/right/up/down` input actions. Used by Top-Down. Only the player
+  moves this way (vector-summed, free-roam) — NPCs are always grid-only, see
+  below.
 - **Top-Down world** — `scenes/worlds/topdown_world/` — flat-color 10x10
   walled room (no tiles/textures), built from plain `Polygon2D` +
   `StaticBody2D` walls. Free-roam movement (see above).
@@ -53,14 +54,31 @@ catalog — this file tracks what exists, where it lives, and its status.
   grid, room-shape-agnostic: takes a `cell_to_world: Callable` so the same
   class drives NPCs on both the isometric room's diamond grid
   (`TileMapLayer.map_to_local`) and Top-Down's plain square grid
-  (`cell * CELL_SIZE`).
+  (`cell * CELL_SIZE`). NPCs are **always** grid-only — never free-roam,
+  unlike the player.
 - **Generic NPC** — `scenes/npc/npc.gd`/`.tscn` — extends `GridActor`,
   patrols back and forth between two grid cells (`configure_at_cells()`),
-  pausing at each; `AnchorA`/`AnchorB` markers are repositioned to match for
-  inspection. No schedule/time-of-day routing yet (just the 2 fixed
-  anchors). Reacts to the player entering its `ProximityArea` with a small
-  squash tween. One instance in each world (isometric: diamond grid,
-  top-down: square grid) — same scene, different `cell_to_world`.
+  pathfinding with Godot's built-in `AStarGrid2D` (real pathfinding, not
+  just "step toward the target" — each room builds one shared nav grid,
+  see `_build_nav_grid()` in the room scripts) and pausing at each end.
+  `AnchorA`/`AnchorB` markers are repositioned to match for inspection. No
+  schedule/time-of-day routing yet (just the 2 fixed anchors). Reacts to the
+  player entering its `ProximityArea` with a small squash tween. One
+  instance in each world (isometric: diamond grid, top-down: square grid) —
+  same scene, different `cell_to_world` + nav grid.
+- **Character sprites** — `scenes/common/character_sprite.gd`
+  (`CharacterSprite`) + `scenes/common/directional_facing.gd`
+  (`DirectionalFacing`) — directional `AnimatedSprite2D` driven by the
+  `Template-<AnimationType>-Sheet.png` naming convention, with a tint
+  (`modulate`) so one sheet can cover many recolors. `DirectionalFacing`
+  picks which movement key "wins" for the player's facing/animation when
+  several are held (greatest input strength, tied broken by whichever was
+  pressed first) — NPCs don't need it, their facing is just whatever
+  direction they're currently stepping in. **Full spec (row layout, per-world
+  direction mapping, naming rules) is in
+  [assets/characters/CHARACTER_SPRITES.md](assets/characters/CHARACTER_SPRITES.md)
+  — read that before touching this system.** Current tints: Player blue
+  (`Color(0.498, 0.839, 1, 1)`), NPC orange (`Color(1, 0.65, 0.3, 1)`).
 - **Placeholder iso tile generator** — `tools/gen_iso_placeholder_tiles.gd` —
   `@tool` `EditorScript` that (re)draws the flat-colour diamond floor/wall
   tiles (File > Run in the editor). Swap for real pixel art later.
@@ -130,10 +148,11 @@ instanceable scene — both worlds include it as a child:
   GameClock pausing on its timeline signals — installed ahead of need for
   future dialogue-driven systems.
 - **[Character Templates Pack](https://erisesra.itch.io/character-templates-pack)**
-  by Eris Esra — reserved for future placeholder character art (not added to
-  the repo yet). Its license only covers finished work built with it: the
-  templates themselves may not be resold/redistributed as a standalone pack.
-  See [LICENSE](LICENSE) for the full terms and required credit.
+  by Eris Esra (`assets/characters/Template-*-Sheet.png`) — the placeholder
+  character art used by Player/NPC (see Character sprites above). Its
+  license only covers finished work built with it: the templates themselves
+  may not be resold/redistributed as a standalone pack. See
+  [LICENSE](LICENSE) for the full terms and required credit.
 
 ## Deliberately deferred
 

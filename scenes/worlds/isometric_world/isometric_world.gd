@@ -22,13 +22,27 @@ const CAMERA_MARGIN := 200.0
 func _ready() -> void:
 	_build_room()
 
-	var axes := _compute_screen_axes()
+	var axes := _classify_axes()
 	player.global_position = floor_layer.map_to_local(Vector2i(ROOM_CELLS / 2, ROOM_CELLS / 2))
-	player.set_iso_axes(axes["north"], axes["east"])
+	player.set_iso_axes(axes["north"]["screen_dir"], axes["east"]["screen_dir"])
 
-	npc.configure_at_cells(floor_layer.map_to_local, Vector2i(3, 3), Vector2i(6, 3), _is_walkable)
+	var grid_dir_to_facing := {}
+	for direction in axes:
+		grid_dir_to_facing[axes[direction]["grid_delta"]] = direction
+	npc.configure_at_cells(floor_layer.map_to_local, Vector2i(3, 3), Vector2i(6, 3), _build_nav_grid(), grid_dir_to_facing)
 
 	_configure_camera()
+
+
+## A shared AStarGrid2D for every NPC in this room to pathfind on — real
+## pathfinding (not just "step toward the target"), so it already handles
+## obstacles if/when this room grows any.
+func _build_nav_grid() -> AStarGrid2D:
+	var nav_grid := AStarGrid2D.new()
+	nav_grid.region = Rect2i(0, 0, ROOM_CELLS, ROOM_CELLS)
+	nav_grid.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
+	nav_grid.update()
+	return nav_grid
 
 
 ## Fills a ROOM_CELLS x ROOM_CELLS floor and rings it with a one-cell-thick
@@ -46,36 +60,32 @@ func _build_room() -> void:
 		wall_layer.set_cell(Vector2i(ROOM_CELLS, y), WALL_SOURCE_ID, Vector2i.ZERO)
 
 
-func _is_walkable(cell: Vector2i) -> bool:
-	return cell.x >= 0 and cell.x < ROOM_CELLS and cell.y >= 0 and cell.y < ROOM_CELLS
-
-
 ## Figures out, from the TileSet's actual isometric projection, which
 ## SCREEN direction each raw grid delta (+X/-X/+Y/-Y) lands in — rather than
 ## assuming Godot's tile_layout sign convention. North/south/east/west are
 ## named by where they land on screen: north = top-left, south =
 ## bottom-right, west = bottom-left, east = top-right (the diamond room's
-## diagonal axes) — returned as normalized world-space direction vectors for
-## IsoPlayerMover's continuous movement.
-func _compute_screen_axes() -> Dictionary:
+## diagonal axes). Returns direction -> {screen_dir: normalized Vector2 (for
+## IsoPlayerMover's continuous movement), grid_delta: Vector2i (for NPC's
+## grid-stepped facing)}.
+func _classify_axes() -> Dictionary:
 	var origin: Vector2 = floor_layer.map_to_local(Vector2i.ZERO)
-	var candidates := [
-		floor_layer.map_to_local(Vector2i(1, 0)) - origin,
-		floor_layer.map_to_local(Vector2i(-1, 0)) - origin,
-		floor_layer.map_to_local(Vector2i(0, 1)) - origin,
-		floor_layer.map_to_local(Vector2i(0, -1)) - origin,
-	]
+	var candidates: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 	var axes := {}
-	for screen_delta: Vector2 in candidates:
+	for grid_delta in candidates:
+		var screen_delta: Vector2 = floor_layer.map_to_local(grid_delta) - origin
+		var direction := ""
 		if screen_delta.x < 0 and screen_delta.y < 0:
-			axes["north"] = screen_delta.normalized()
+			direction = "north"
 		elif screen_delta.x > 0 and screen_delta.y > 0:
-			axes["south"] = screen_delta.normalized()
+			direction = "south"
 		elif screen_delta.x < 0 and screen_delta.y > 0:
-			axes["west"] = screen_delta.normalized()
+			direction = "west"
 		elif screen_delta.x > 0 and screen_delta.y < 0:
-			axes["east"] = screen_delta.normalized()
+			direction = "east"
+		if direction != "":
+			axes[direction] = {"screen_dir": screen_delta.normalized(), "grid_delta": grid_delta}
 	return axes
 
 

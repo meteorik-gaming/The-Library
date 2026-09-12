@@ -1,12 +1,16 @@
 class_name Player
 extends CharacterBody2D
-## Shared movement controller for The Library's placeholder worlds — corner
-## assist included, minus any AnimatedSprite2D facing logic, since there's no
-## walk-cycle art yet (see the Square child for the placeholder visual).
+## Shared movement controller for The Library's placeholder worlds — free
+## continuous movement with corner assist, facing/animating via CharacterSprite
+## based on whichever movement key currently "wins" (see DirectionalFacing).
 
 const SPEED := 220.0
 const CORNER_ASSIST_MAX := 3.0
 const CORNER_ASSIST_STEP := 1.0
+
+@onready var sprite: CharacterSprite = $Sprite
+
+var _facing := DirectionalFacing.new()
 
 
 func _physics_process(_delta: float) -> void:
@@ -14,6 +18,13 @@ func _physics_process(_delta: float) -> void:
 	velocity = input_dir * SPEED
 	_apply_corner_assist(input_dir)
 	move_and_slide()
+
+	_facing.update()
+	var direction := _facing.current_direction()
+	if direction != "":
+		sprite.play_moving(direction)
+	else:
+		sprite.play_idle()
 
 
 ## If the input direction is blocked but a small perpendicular nudge would

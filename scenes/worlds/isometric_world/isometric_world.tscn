@@ -49,4 +49,7 @@ tile_set = ExtResource("2")
 [node name="NPC" parent="." instance=ExtResource("4")]
 position = Vector2(320, 96)
 
+[node name="Sprite" parent="NPC" index="0"]
+is_isometric = true
+
 [node name="WorldChrome" parent="." instance=ExtResource("5")]

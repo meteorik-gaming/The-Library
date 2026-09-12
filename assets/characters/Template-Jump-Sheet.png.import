@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bvmo1wkm5mc2k"
-path="res://.godot/imported/Rotate-Sheet.png-f94e3d8287a7729e596f7d41ffda6445.ctex"
+uid="uid://nwrqua4b0el7"
+path="res://.godot/imported/Template-Jump-Sheet.png-f55c5dd3cee02e00a27add7fa84a7bfa.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/Rotate-Sheet.png"
-dest_files=["res://.godot/imported/Rotate-Sheet.png-f94e3d8287a7729e596f7d41ffda6445.ctex"]
+source_file="res://assets/characters/Template-Jump-Sheet.png"
+dest_files=["res://.godot/imported/Template-Jump-Sheet.png-f55c5dd3cee02e00a27add7fa84a7bfa.ctex"]
 
 [params]
 

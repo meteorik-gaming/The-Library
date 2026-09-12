@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://qssupkerj7or"
-path="res://.godot/imported/Walk-Sheet.png-53bf334dfc3524b50ff12465d7870d52.ctex"
+uid="uid://cmbbi08dv4kn0"
+path="res://.godot/imported/Template-Rotate-Sheet.png-914117e7c5a06766465141af790f926e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/characters/Walk-Sheet.png"
-dest_files=["res://.godot/imported/Walk-Sheet.png-53bf334dfc3524b50ff12465d7870d52.ctex"]
+source_file="res://assets/characters/Template-Rotate-Sheet.png"
+dest_files=["res://.godot/imported/Template-Rotate-Sheet.png-914117e7c5a06766465141af790f926e.ctex"]
 
 [params]
 
