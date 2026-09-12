@@ -9,6 +9,7 @@ extends AnimatedSprite2D
 ## current world type.
 
 const FRAME_SIZE := 32
+const DISPLAY_SCALE := 2.0
 const ANIMATION_TYPES := ["Attack", "Idle", "Interact", "Jump", "Rotate", "Run", "Walk"]
 const ROW_NAMES := ["front", "diagonal_front", "side", "diagonal_back", "back"]
 const SHEET_PATH_FORMAT := "res://assets/characters/%s-%s-Sheet.png"
@@ -39,6 +40,7 @@ var _current_direction := "south"
 func _ready() -> void:
 	_row_map = ISO_ROW_MAP if is_isometric else TOPDOWN_ROW_MAP
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	scale = Vector2(DISPLAY_SCALE, DISPLAY_SCALE)
 	modulate = tint
 	sprite_frames = _build_sprite_frames()
 	play_idle()

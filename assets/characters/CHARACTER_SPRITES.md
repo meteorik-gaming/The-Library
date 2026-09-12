@@ -32,9 +32,12 @@ sheets that actually exist for that identifier.
 
 ## Sheet layout
 
-Every frame is **32x32px**. Columns are animation frames (left to right);
-frame count varies per animation (e.g. Idle might be 4 frames, Attack 7) but
-every animation **loops**.
+Every frame is **32x32px** in the source file. `CharacterSprite` displays it
+at **2x** (`DISPLAY_SCALE`) with nearest-neighbor filtering (no
+interpolation) so every source pixel becomes a crisp 2x2 block on screen —
+change `DISPLAY_SCALE` there if the target size ever needs to move. Columns
+are animation frames (left to right); frame count varies per animation
+(e.g. Idle might be 4 frames, Attack 7) but every animation **loops**.
 
 Rows (top to bottom) are facing directions — **5 rows**, except `Rotate`
 (see below):
