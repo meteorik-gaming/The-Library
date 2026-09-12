@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/npc/npc.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(20, 20)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 48.0
+
+[node name="NPC" type="CharacterBody2D" groups=["interactable"]]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1")
+
+[node name="Square" type="Polygon2D" parent="."]
+color = Color(1, 0.65, 0.3, 1)
+polygon = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="ProximityArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ProximityArea"]
+shape = SubResource("CircleShape2D_1")
+
+[node name="AnchorA" type="Marker2D" parent="."]
+
+[node name="AnchorB" type="Marker2D" parent="."]
+position = Vector2(128, 0)

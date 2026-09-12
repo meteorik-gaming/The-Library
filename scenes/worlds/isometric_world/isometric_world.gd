@@ -1,8 +1,9 @@
 extends Node2D
 ## Isometric equivalent of scenes/worlds/topdown_world/ — same 10x10 walled
 ## room spec, built on an isometric TileSet (64x32 diamond tiles) instead of
-## flat rectangles. Same shared Player/back-to-menu behavior as the top-down
-## room, just laid out on a tile grid.
+## flat rectangles. Movement here is grid-stepped (see IsoGridActor) instead
+## of free-roam, with WASD assigned to screen directions rather than raw grid
+## axes — see iso_player_mover.gd for the mapping.
 
 const MAIN_MENU_SCENE := "res://scenes/main_menu/main_menu.tscn"
 const ROOM_CELLS := 10
@@ -12,14 +13,20 @@ const CAMERA_MARGIN := 200.0
 
 @onready var floor_layer: TileMapLayer = $FloorLayer
 @onready var wall_layer: TileMapLayer = $WallLayer
-@onready var player: Player = $Player
+@onready var player: IsoPlayerMover = $Player
+@onready var npc: NPC = $NPC
 @onready var camera: Camera2D = $Player/Camera2D
 
 
 func _ready() -> void:
 	_build_room()
-	var center_cell := Vector2i(ROOM_CELLS / 2, ROOM_CELLS / 2)
-	player.position = floor_layer.map_to_local(center_cell)
+
+	var axes := _compute_screen_axes()
+	var start_cell := Vector2i(ROOM_CELLS / 2, ROOM_CELLS / 2)
+	player.setup(floor_layer, start_cell, _is_walkable)
+	player.set_axes(axes)
+	npc.configure_at_cells(floor_layer, Vector2i(3, 3), Vector2i(6, 3), _is_walkable)
+
 	_configure_camera()
 
 
@@ -36,6 +43,39 @@ func _build_room() -> void:
 	for y in range(-1, ROOM_CELLS + 1):
 		wall_layer.set_cell(Vector2i(-1, y), WALL_SOURCE_ID, Vector2i.ZERO)
 		wall_layer.set_cell(Vector2i(ROOM_CELLS, y), WALL_SOURCE_ID, Vector2i.ZERO)
+
+
+func _is_walkable(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.x < ROOM_CELLS and cell.y >= 0 and cell.y < ROOM_CELLS
+
+
+## Figures out, from the TileSet's actual isometric projection, which raw
+## grid delta (+X/-X/+Y/-Y) lands in each screen quadrant — rather than
+## assuming Godot's tile_layout sign convention. North/south/east/west are
+## named by where they land on screen: north = top-left, south =
+## bottom-right, west = bottom-left, east = top-right (per the diamond
+## room's diagonal axes).
+func _compute_screen_axes() -> Dictionary:
+	var origin: Vector2 = floor_layer.map_to_local(Vector2i.ZERO)
+	var candidates := {
+		Vector2i(1, 0): floor_layer.map_to_local(Vector2i(1, 0)) - origin,
+		Vector2i(-1, 0): floor_layer.map_to_local(Vector2i(-1, 0)) - origin,
+		Vector2i(0, 1): floor_layer.map_to_local(Vector2i(0, 1)) - origin,
+		Vector2i(0, -1): floor_layer.map_to_local(Vector2i(0, -1)) - origin,
+	}
+
+	var axes := {}
+	for cell_delta: Vector2i in candidates:
+		var screen_delta: Vector2 = candidates[cell_delta]
+		if screen_delta.x < 0 and screen_delta.y < 0:
+			axes["north"] = cell_delta
+		elif screen_delta.x > 0 and screen_delta.y > 0:
+			axes["south"] = cell_delta
+		elif screen_delta.x < 0 and screen_delta.y > 0:
+			axes["west"] = cell_delta
+		elif screen_delta.x > 0 and screen_delta.y < 0:
+			axes["east"] = cell_delta
+	return axes
 
 
 ## Isometric projection isn't axis-aligned, so bound the camera with the

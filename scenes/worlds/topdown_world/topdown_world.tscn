@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scenes/worlds/topdown_world/topdown_world.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/world_chrome/world_chrome.tscn" id="3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h"]
 size = Vector2(704, 32)
@@ -83,3 +84,5 @@ polygon = PackedVector2Array(-16, -352, 16, -352, 16, 352, -16, 352)
 
 [node name="Player" parent="." instance=ExtResource("2")]
 position = Vector2(320, 320)
+
+[node name="WorldChrome" parent="." instance=ExtResource("3")]

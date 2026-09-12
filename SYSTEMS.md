@@ -7,7 +7,7 @@ catalog — this file tracks what exists, where it lives, and its status.
 ## UI / flow
 
 - **Launch screen** — `scenes/launch_screen/` — splash with the project name;
-  auto-advances after 2.5s or on any key/click.
+  auto-advances after ~2s, no skip-on-input.
 - **Main menu** — `scenes/main_menu/` — Jugar / Opciones / Salir.
 - **Overlay screen system** — `scenes/screens/screen_base.gd` (`ScreenBase`) +
   `scenes/screens/ui_kit.gd` (`UiKit`) — generic dimmed-backdrop + centered
@@ -20,33 +20,90 @@ catalog — this file tracks what exists, where it lives, and its status.
 - **Options screen** — `scenes/screens/options_screen.gd` — master volume +
   fullscreen toggle. Applies live; **not persisted to disk yet**.
 
-## Player & worlds
+## Player, NPCs & worlds
 
-- **Shared player controller** — `scenes/player/player.gd`/`.tscn` —
+- **Shared player controller** — `scenes/player/player.gd`/`.tscn` — free-roam
   `CharacterBody2D` with corner-assist movement (softens tight-corner turns
   so they don't need pixel-precise alignment), driven by the
-  `move_left/right/up/down` input actions. No walk-cycle art yet, so it's
-  just a placeholder square — one scene, instanced by every world.
+  `move_left/right/up/down` input actions. Used by Top-Down. No walk-cycle
+  art yet, so it's just a placeholder square.
 - **Top-Down world** — `scenes/worlds/topdown_world/` — flat-color 10x10
   walled room (no tiles/textures), built from plain `Polygon2D` +
-  `StaticBody2D` walls.
+  `StaticBody2D` walls. Free-roam movement (see above).
 - **Isometric world** — `scenes/worlds/isometric_world/` — same 10x10
   walled-room spec, built procedurally (`_build_room()` at runtime) on an
   isometric `TileSet` (`assets/tiles/iso_tileset.tres`, 64x32 diamond tiles).
-  Two `TileMapLayer`s (floor, Y-sorted walls).
+  Two `TileMapLayer`s (floor, Y-sorted walls). Movement is **grid-stepped**,
+  not free-roam — see below.
+- **Isometric grid movement** — `scenes/worlds/isometric_world/iso_grid_actor.gd`
+  (`IsoGridActor`, base class: one-cell-at-a-time tweened stepping) +
+  `iso_player_mover.gd` (`IsoPlayerMover`, WASD-driven). WASD is mapped to
+  *screen* direction rather than raw grid axis — the room script empirically
+  derives which grid delta lands in which screen quadrant from the TileSet's
+  actual isometric projection (`_compute_screen_axes()` in
+  `isometric_world.gd`), rather than assuming Godot's `tile_layout` sign
+  convention. Result: W = north = screen top-left, S = south = screen
+  bottom-right, A = west = screen bottom-left, D = east = screen top-right.
+- **Generic NPC** — `scenes/npc/npc.gd`/`.tscn` — extends `IsoGridActor`,
+  patrols back and forth between two `Marker2D` anchor points on the grid
+  (`AnchorA`/`AnchorB`), pausing at each. No schedule/time-of-day routing
+  yet (just the 2 fixed anchors). Reacts to the player entering its
+  `ProximityArea` with a small squash tween. One is placed in the isometric
+  world; not yet in Top-Down (which has no grid to step on).
 - **Placeholder iso tile generator** — `tools/gen_iso_placeholder_tiles.gd` —
   `@tool` `EditorScript` that (re)draws the flat-colour diamond floor/wall
   tiles (File > Run in the editor). Swap for real pixel art later.
 
+## World chrome (day/night, devtools, keybinds)
+
+`scenes/world_chrome/world_chrome.tscn` bundles the systems below into one
+instanceable scene — both worlds include it as a child:
+
+- **Day/night ambient lighting** — `day_night_lighting.gd` on a
+  `CanvasModulate`, driven by `GameClock`. Samples `day_night_gradient.tres`
+  (offset 0..1 = 00:00..24:00) every frame for a continuous colour fade;
+  also eases a screen-edge vignette (`atmosphere_vignette.gdshader`) and
+  fades any `PointLight2D`s down during the day. Ships with a built-in
+  fallback gradient if none is assigned. Rooms start at 5:00 AM (dawn-ish,
+  intentionally a bit dark) — use the devtools hour/day controls below to
+  jump forward.
+- **GameClock** (`autoload/game_clock.gd`) — continuous real-time day clock
+  in in-game hours (20h/day, 5:00 AM start), pauses automatically while a
+  Dialogic timeline is running. Devtool hooks: `add_hours()`, `add_days()`,
+  `cycle_speed()` (1x/2x/4x/0.5x).
+- **Clock HUD** — `clock_hud.gd`, always-visible "Day N (weekday) / HH:MM
+  (day|night)" readout, top-left. Hour/day/speed control buttons only show
+  while devtools mode is on.
+- **DevTools** (`autoload/dev_tools.gd`) — global `enabled`/`toggled` state,
+  flipped by the `toggle_devtools` action (Q). Anything can react to
+  `toggled` to show/hide its own debug visuals.
+- **Devtools grid overlay** — `devtools_overlay.gd`, Q-toggled spreadsheet-
+  style world grid (column letters, row numbers via `GridRef`) for
+  eyeballing coordinates when placing things.
+- **GridRef** (`autoload/grid_ref.gd`) — spreadsheet-style coordinate helper
+  (`cell_to_label`, `ref_to_cell`, `ref_to_world`, `rect_from_refs`) so code
+  can refer to world positions the way you'd read them off the grid overlay
+  (e.g. `"C3"`).
+- **Keybinds** (`autoload/keybinds.gd`) + **Keybinds panel**
+  (`keybinds_panel.gd`, E-toggled via `toggle_stats`) — live rebindable
+  action list (move_* , toggle_devtools, toggle_stats, dialogic_default_action),
+  conflict highlighting, save/reset to `user://keybinds.cfg`. Add an entry to
+  `Keybinds.REBINDABLE_BINDINGS` (+ a label in `keybinds_panel.gd`) and it
+  shows up automatically.
+
 ## Dev tooling
 
 - **Screenshot/smoke-test harness** — `tests/screens_smoke_test.*` (UI
-  screens) and `tests/worlds_smoke_test.*` (world scenes, incl. a real
-  movement + wall-collision check, not just a screenshot) — each test script
-  is headed with a `<godot> res://tests/x.tscn (windowed; renders)` comment
-  documenting how to invoke it (needs a real window to capture
-  `get_viewport().get_texture()`; `--headless` won't render). Screenshots
-  land in `tests/screenshots/`.
+  screens) and `tests/worlds_smoke_test.*` (world scenes — real movement,
+  wall-collision, iso screen-direction, NPC-autopilot, and devtools/keybinds
+  toggle checks, not just a screenshot) — each test script is headed with a
+  `<godot> res://tests/x.tscn (windowed; renders)` comment documenting how to
+  invoke it (needs a real window to capture `get_viewport().get_texture()`;
+  `--headless` won't render). Screenshots land in `tests/screenshots/`.
+  Note: `Input.action_press()` only sets polling state and won't reach
+  `_unhandled_input()`-based code (DevTools, Keybinds) — use a real
+  `InputEventAction` round-trip via `Input.parse_input_event()` instead (see
+  `_fire_action()` in `worlds_smoke_test.gd`).
 
 ## Typography & theme
 
@@ -58,8 +115,9 @@ catalog — this file tracks what exists, where it lives, and its status.
 
 - **[Dialogic](https://github.com/dialogic-godot/dialogic)**
   (`addons/dialogic/`, v2.0-Alpha-20, MIT license) — installed and enabled,
-  autoloaded as `Dialogic`. Not wired into any scene/content yet — installed
-  ahead of need for future dialogue-driven systems.
+  autoloaded as `Dialogic`. Not wired into any scene/content yet beyond
+  GameClock pausing on its timeline signals — installed ahead of need for
+  future dialogue-driven systems.
 - **[Character Templates Pack](https://erisesra.itch.io/character-templates-pack)**
   by Eris Esra — reserved for future placeholder character art (not added to
   the repo yet). Its license only covers finished work built with it: the
@@ -72,4 +130,7 @@ catalog — this file tracks what exists, where it lives, and its status.
   separate pass.
 - Options screen has no save/load — add a `ConfigFile`-backed settings
   system when it's actually needed.
-- No save/load system for gameplay state yet.
+- No save/load system for gameplay state yet (GameClock has no
+  save/load-state methods either — add them alongside the save system).
+- NPC has no schedule/time-of-day routing yet, just the 2 fixed anchors; no
+  Top-Down (non-grid) NPC variant yet either.
