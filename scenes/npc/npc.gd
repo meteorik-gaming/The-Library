@@ -87,6 +87,9 @@ func _on_proximity_entered(body: Node) -> void:
 		return
 	if _react_tween:
 		_react_tween.kill()
+	# Squash relative to CharacterSprite's own display scale, not a bare
+	# 1.0 -- otherwise this settles back to 1x and undoes DISPLAY_SCALE.
+	var rest_scale := Vector2.ONE * CharacterSprite.DISPLAY_SCALE
 	_react_tween = create_tween()
-	_react_tween.tween_property(sprite, "scale", Vector2(1.15, 0.9), 0.12)
-	_react_tween.tween_property(sprite, "scale", Vector2.ONE, 0.18)
+	_react_tween.tween_property(sprite, "scale", rest_scale * Vector2(1.15, 0.9), 0.12)
+	_react_tween.tween_property(sprite, "scale", rest_scale, 0.18)
