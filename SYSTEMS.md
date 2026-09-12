@@ -133,6 +133,18 @@ instanceable scene — both worlds include it as a child:
   `_unhandled_input()`-based code (DevTools, Keybinds) — use a real
   `InputEventAction` round-trip via `Input.parse_input_event()` instead (see
   `_fire_action()` in `worlds_smoke_test.gd`).
+- **GIF recorder** — `tests/record_gif.gd`/`.tscn` — records any scene in
+  motion to an animated GIF, for bugs a static screenshot can't catch (the
+  first frame of the NPC-shrinks-while-patrolling bug looked completely
+  correct — only visible over time). Takes the target scene path (and
+  optional seconds/fps) as CLI args after `--`:
+  ```
+  godot --path . res://tests/record_gif.tscn -- res://scenes/worlds/isometric_world/isometric_world.tscn 1.5 12
+  ```
+  Captures frames to `user://gif_frames/`, then shells out to **ffmpeg**
+  (must be on PATH) for a two-pass palettegen/paletteuse encode — a
+  single-pass GIF encode looks noticeably muddier. Prints the final
+  `user://recording.gif` path. Defaults: 1.5s at 12fps.
 
 ## Typography & theme
 
